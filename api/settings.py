@@ -11,10 +11,11 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
-import os
+from decouple import config
 
 
-ENVIRONMENT = os.environ.get('DJANGO_ENV', 'development')
+
+ENVIRONMENT = config('DJANGO_ENV', 'development')
 DEBUG = ENVIRONMENT == 'development'
 
 
@@ -26,13 +27,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = config('SECRET_KEY')
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
 
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', '').split(',')
 
 
 # Application definition
@@ -68,7 +69,8 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5173",
-    "http://localhost:5174"
+    "http://localhost:5174",
+    "hifzworld.onrender.com"
 ]
 
 CORS_ALLOW_METHODS = [
@@ -136,7 +138,7 @@ import dj_database_url
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL')
+        default=config('DATABASE_URL')
     )
 }
 
