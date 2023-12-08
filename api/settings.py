@@ -56,6 +56,7 @@ AUTH_USER_MODEL = 'accounts.User'
 
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -63,7 +64,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 CORS_ALLOWED_ORIGINS = [
@@ -72,7 +72,6 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5174",
     "https://hifzworld.onrender.com",
     "https://hifzworld-svelte-thisnabeel.vercel.app",
-    "https://hifzworld-svelte-thisnabeel.vercel.app/"
 ]
 
 
@@ -84,7 +83,6 @@ CORS_ALLOW_METHODS = [
     "POST",
     "PUT",
 ]
-
 CORS_ALLOW_HEADERS = [
     "accept",
     "accept-encoding",
@@ -167,7 +165,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 SECURE_HSTS_SECONDS = 31536000
-SECURE_SSL_REDIRECT = True
+
+SECURE_SSL_REDIRECT = ENVIRONMENT != 'development'
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
