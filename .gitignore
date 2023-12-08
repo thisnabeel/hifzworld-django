@@ -1,0 +1,23 @@
+# .gitignore
+
+# Python files
+*.pyc
+__pycache__/
+
+# Virtual environment
+venv/
+
+# IDE/Editor files
+.vscode/
+.idea/
+
+# Logs and temporary files
+*.log
+*.swp
+*.swo
+
+# Environment-specific files
+.env
+
+# Database
+db.sqlite3
