@@ -70,7 +70,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5173",
     "http://localhost:5174",
-    "hifzworld.onrender.com"
+    "https://hifzworld.onrender.com"
 ]
 
 CORS_ALLOW_METHODS = [
