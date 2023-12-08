@@ -70,7 +70,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5173",
     "http://localhost:5174",
-    "https://hifzworld.onrender.com"
+    "https://hifzworld.onrender.com",
+    "https://hifzworld-svelte-thisnabeel.vercel.app"
 ]
 
 CORS_ALLOW_METHODS = [
