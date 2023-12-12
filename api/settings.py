@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'mushaf',
     'django.contrib.admin',
     'accounts',
+    'lead',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
