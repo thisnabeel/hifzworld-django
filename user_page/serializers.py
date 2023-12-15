@@ -15,7 +15,7 @@ class CreateUserPageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserPage
-        fields = ['id']
+        fields = '__all__'
 
 
 class UserProgressSerializer(serializers.ModelSerializer):

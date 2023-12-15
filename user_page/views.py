@@ -13,19 +13,22 @@ class CreateUserPageView(APIView):
         serializer = CreateUserPageSerializer(data=request.data)
         if serializer.is_valid():
             # Using get_or_create to find or create a UserPage
-            user_id = request.data['user_id']
-            mushaf_page_id = request.data['mushaf_page_id']
-            print(mushaf_page_id)
+            user_id = request.data['user']
+            mushaf_page_id = request.data['mushaf_page']
+
+            # Try to get the existing UserPage or create a new one
             user_page, created = UserPage.objects.get_or_create(
                 user=get_user_model().objects.get(id=user_id),
                 mushaf_page=MushafPage.objects.get(id=mushaf_page_id),
-                defaults=request.data  # Additional fields to set when creating a new object
             )
 
-            if created:
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            # If the UserPage is newly created or not, update its fields with the new values
+            serializer = CreateUserPageSerializer(user_page, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
             else:
-                return Response("UserPage already exists", status=status.HTTP_200_OK)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

@@ -10,7 +10,7 @@ class UserPage(models.Model):
     mushaf_page = models.ForeignKey(MushafPage, on_delete=models.CASCADE)
 
     # Array of dicts (using a JSONField for flexibility)
-    drawn_paths = models.JSONField(default=list)
+    drawn_paths = models.JSONField(default=list, null=True)
 
     # Foreign key to User model
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
