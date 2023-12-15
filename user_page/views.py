@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import UserPageSerializer, CreateUserPageSerializer
+from .serializers import UserPageSerializer, CreateUserPageSerializer, UserProgressSerializer
 from .models import UserPage
 from rest_framework.authtoken.views import ObtainAuthToken
 from mushaf_page.models import MushafPage
@@ -35,3 +35,10 @@ class UserPageView(APIView):
         serializer = UserPageSerializer(user_page)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class UserProgressView(APIView):
+    def get(self, request, user_id):
+        user_page = UserPage.objects.filter(user_id=user_id)
+        serializer = UserProgressSerializer(user_page, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    

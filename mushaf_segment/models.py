@@ -13,3 +13,4 @@ class MushafSegment(models.Model):
 
     def __str__(self):
         return self.title  # Adjust this based on how you want to represent the object as a string
+    
