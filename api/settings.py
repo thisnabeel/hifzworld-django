@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'user_page',
     'mushaf_page',
+    'mushaf_segment',
     'mushaf',
     'django.contrib.admin',
     'accounts',

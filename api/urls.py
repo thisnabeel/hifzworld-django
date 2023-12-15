@@ -15,12 +15,15 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 
 from accounts.views import CreateUserView, SignInView
 from mushaf_page.views import MushafPageView
 from user_page.views import UserPageView, CreateUserPageView
 from lead.views import CreateLeadView
+from mushaf_segment.views import MushafSegmentsView
+
+
 
 
 
@@ -35,5 +38,6 @@ urlpatterns = [
     path('user_pages', CreateUserPageView.as_view(), name='create_user_page'),   
 
     path('leads', CreateLeadView.as_view(), name='create_lead'),
-
+    
+    path('', include('mushaf_segment.urls')),  
 ]
