@@ -40,6 +40,7 @@ class UserProgressSerializer(serializers.ModelSerializer):
             print(segment.title, percentage)
             representation['title'] = segment.title
             representation['percentage'] = percentage
+            representation['page_number'] = page_number
 
 
         return representation

@@ -14,6 +14,7 @@ class UserPage(models.Model):
 
     # Foreign key to User model
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    camped = models.BooleanField(default=False)
 
     class Meta:
         app_label = 'user_page'
