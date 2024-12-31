@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'mushaf_page',
     'mushaf_segment',
     'mushaf',
+    'missions',
     'django.contrib.admin',
     'accounts',
     'lead',

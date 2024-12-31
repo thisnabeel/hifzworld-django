@@ -23,12 +23,6 @@ from user_page.views import UserPageView, CreateUserPageView, UserProgressView
 from lead.views import CreateLeadView
 from mushaf_segment.views import MushafSegmentsView
 
-
-
-
-
-
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('users/sign_up', CreateUserView.as_view(), name='create_user'),
@@ -43,4 +37,5 @@ urlpatterns = [
     path('leads', CreateLeadView.as_view(), name='create_lead'),
     
     path('', include('mushaf_segment.urls')),  
+    path('', include('missions.urls')),
 ]
