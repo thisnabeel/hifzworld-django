@@ -21,6 +21,8 @@ class MushafPage(models.Model):
     image_url = models.CharField(max_length=255, default="null")  # Adjust the max length as needed
     image_s3_key = models.CharField(max_length=255, default="null")  # Adjust the max length as needed
     mushaf = models.ForeignKey(Mushaf, on_delete=models.CASCADE)  # Adjust on_delete as needed
+    verse_ref_start = models.CharField(max_length=255, default="null")
+    verse_ref_end = models.CharField(max_length=255, default="null")
 
     class Meta:
         app_label = 'mushaf_page'

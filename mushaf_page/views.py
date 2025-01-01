@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import MushafPage
 from .serializers import MushafPageSerializer
+from rest_framework import generics
 
 class MushafPageView(APIView):
     def get(self, request, mushaf_id, page_number):
@@ -17,3 +18,7 @@ class MushafPageView(APIView):
 
         # Return the serialized data in the response
         return Response(serialized_data, status=status.HTTP_200_OK)
+
+class MushafPageDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = MushafPage.objects.all()
+    serializer_class = MushafPageSerializer

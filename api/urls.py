@@ -38,4 +38,5 @@ urlpatterns = [
     
     path('', include('mushaf_segment.urls')),  
     path('', include('missions.urls')),
+    path('', include('mushaf_page.urls')),
 ]
