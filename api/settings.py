@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'accounts',
     'lead',
+    'branch',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',

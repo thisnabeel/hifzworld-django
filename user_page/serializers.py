@@ -1,15 +1,21 @@
 from rest_framework import serializers
 from .models import UserPage
-from django.contrib.auth import authenticate
-from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth import get_user_model
 from mushaf_page.models import MushafPage
+from datetime import datetime
 
 class UserPageSerializer(serializers.ModelSerializer):
-    
+    created_at = serializers.SerializerMethodField()  # Add a custom method field
+
     class Meta:
         model = UserPage
         fields = '__all__'
+
+    def get_created_at(self, obj):
+        # Format created_at field to desired format
+        if obj.created_at:
+            return obj.created_at.strftime('%-m.%-d.%y %-I:%M%p')
+        return None
+
 
 class CreateUserPageSerializer(serializers.ModelSerializer):
 
@@ -17,11 +23,23 @@ class CreateUserPageSerializer(serializers.ModelSerializer):
         model = UserPage
         fields = '__all__'
 
+    def get_created_at(self, obj):
+        # Format created_at field to desired format
+        if obj.created_at:
+            return obj.created_at.strftime('%-m.%-d.%y %-I:%M%p')
+        return None
 
 class UserProgressSerializer(serializers.ModelSerializer):
+    created_at = serializers.SerializerMethodField()  # Add the custom method field here too
+
     class Meta:
         model = UserPage
         fields = '__all__'
+
+    def get_created_at(self, obj):
+        if obj.created_at:
+            return obj.created_at.strftime('%-m.%-d.%y %-I:%M%p')
+        return None
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -30,8 +48,6 @@ class UserProgressSerializer(serializers.ModelSerializer):
         model_instance = instance  # This is the model instance being serialized
 
         # You can access its fields or perform any custom logic
-
-
         mushaf_page = model_instance.mushaf_page
         page_number = mushaf_page.page_number
 
@@ -42,6 +58,4 @@ class UserProgressSerializer(serializers.ModelSerializer):
             representation['percentage'] = percentage
             representation['page_number'] = page_number
 
-
         return representation
-    

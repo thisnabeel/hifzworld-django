@@ -6,41 +6,50 @@ from .serializers import UserPageSerializer, CreateUserPageSerializer, UserProgr
 from .models import UserPage
 from rest_framework.authtoken.views import ObtainAuthToken
 from mushaf_page.models import MushafPage
+from branch.models import Branch
 from django.contrib.auth import get_user_model
 from itertools import groupby
 from operator import itemgetter
 from django.shortcuts import render
 from operator import attrgetter
 
+
 class CreateUserPageView(APIView):
     def post(self, request):
         serializer = CreateUserPageSerializer(data=request.data)
         if serializer.is_valid():
-            # Using get_or_create to find or create a UserPage
             user_id = request.data['user']
             mushaf_page_id = request.data['mushaf_page']
+            branch_id = request.data['branch']
 
-            # Try to get the existing UserPage or create a new one
-            user_page, created = UserPage.objects.get_or_create(
-                user=get_user_model().objects.get(id=user_id),
-                mushaf_page=MushafPage.objects.get(id=mushaf_page_id),
-            )
+            try:
+                # Create a new UserPage instance
+                user_page = UserPage.objects.create(
+                    user=get_user_model().objects.get(id=user_id),
+                    mushaf_page=MushafPage.objects.get(id=mushaf_page_id),
+                    branch=Branch.objects.get(id=branch_id),
+                    drawn_paths=request.data.get('drawn_paths', []),
+                    camped=request.data.get('camped', False)
+                )
+                serializer = CreateUserPageSerializer(user_page)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-            # If the UserPage is newly created or not, update its fields with the new values
-            serializer = CreateUserPageSerializer(user_page, data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                return Response(
+                    {"error": str(e)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 class UserPageView(APIView):
-    def get(self, request, user_id, mushaf_page_id):
-        user_page = UserPage.objects.filter(mushaf_page_id=mushaf_page_id, user_id=user_id).first()
-        serializer = UserPageSerializer(user_page)
+    def get(self, request, user_id, mushaf_page_id, branch_id):
+        user_pages = UserPage.objects.filter(
+            mushaf_page_id=mushaf_page_id, 
+            user_id=user_id, 
+            branch_id=branch_id
+        ).order_by('-created_at')
         
+        serializer = UserPageSerializer(user_pages, many=True)  # Set many=True to serialize multiple objects
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 class UserProgressView(APIView):
