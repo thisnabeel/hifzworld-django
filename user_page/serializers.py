@@ -18,6 +18,7 @@ class UserPageSerializer(serializers.ModelSerializer):
 
 
 class CreateUserPageSerializer(serializers.ModelSerializer):
+    created_at = serializers.SerializerMethodField()  # Add a custom method field
 
     class Meta:
         model = UserPage
