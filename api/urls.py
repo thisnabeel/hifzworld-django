@@ -32,7 +32,7 @@ urlpatterns = [
     path('user_pages', CreateUserPageView.as_view(), name='create_user_page'),   
     
     path('users/<int:user_id>/progress', UserProgressView.as_view(), name='user_progress'),   
-    path('users/<int:user_id>/progress/random', RandomUserPageView.as_view(), name='user_progress'),   
+    path('users/<int:user_id>/progress/random/<int:current_page_number>', RandomUserPageView.as_view(), name='user_progress'),   
 
 
     path('leads', CreateLeadView.as_view(), name='create_lead'),

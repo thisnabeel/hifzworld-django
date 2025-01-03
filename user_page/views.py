@@ -91,11 +91,12 @@ class UserProgressView(APIView):
 
 
 class RandomUserPageView(APIView):
-    def get(self, request, user_id):
+    def get(self, request, user_id, current_page_number):
         # Step 1: Get the latest UserPage for each mushaf_page where drawn_paths is not null and not empty
         newest_user_pages = (
             UserPage.objects.filter(user_id=user_id, drawn_paths__isnull=False)
             .exclude(drawn_paths=[])
+            .exclude(mushaf_page=current_page_number)
             .values('mushaf_page')  # Group by mushaf_page
             .annotate(latest_created_at=Max('created_at'))  # Get the latest created_at for each mushaf_page
         )
