@@ -12,6 +12,9 @@ from itertools import groupby
 from operator import itemgetter
 from django.shortcuts import render
 from operator import attrgetter
+import random
+from random import choice
+from django.db.models import Max
 
 
 class CreateUserPageView(APIView):
@@ -82,9 +85,49 @@ class UserProgressView(APIView):
 
         queryset = [page for pages in filtered_dict.values() for page in pages]
 
-        # for page in user_pages:
-        #     if page 
-        # mushaf_page.mushaf.get_segment_and_percentage(page_number)
         serializer = UserProgressSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
+
+
+class RandomUserPageView(APIView):
+    def get(self, request, user_id):
+        # Step 1: Get the latest UserPage for each mushaf_page where drawn_paths is not null and not empty
+        newest_user_pages = (
+            UserPage.objects.filter(user_id=user_id, drawn_paths__isnull=False)
+            .exclude(drawn_paths=[])
+            .values('mushaf_page')  # Group by mushaf_page
+            .annotate(latest_created_at=Max('created_at'))  # Get the latest created_at for each mushaf_page
+        )
+
+        # Step 2: Fetch the actual UserPage instances for the latest entries
+        newest_user_page_ids = [
+            UserPage.objects.filter(
+                mushaf_page=data['mushaf_page'],
+                created_at=data['latest_created_at']
+            ).first().id
+            for data in newest_user_pages
+        ]
+
+        # Step 3: Fetch the UserPages that are the latest for each mushaf_page
+        user_pages = UserPage.objects.filter(id__in=newest_user_page_ids)
+
+        # Step 4: Filter the pages with drawn_paths that contains an array with more than 10 objects
+        filtered_user_pages = []
+        for page in user_pages:
+            # Check each array in drawn_paths and find if any array has more than 10 objects
+            for drawn_path_array in page.drawn_paths:
+                if isinstance(drawn_path_array, list) and len(drawn_path_array) > 10:
+                    filtered_user_pages.append(page)
+                    break  # No need to check further if one array matches the condition
+
+        if not filtered_user_pages:
+            return Response({"message": "No UserPages found with drawn_paths arrays having more than 10 objects"},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        # Step 5: Select a random UserPage from the filtered pages
+        random_user_page = choice(filtered_user_pages)
+
+        # Step 6: Serialize and return the random UserPage
+        serializer = UserPageSerializer(random_user_page)
+        return Response(serializer.data, status=status.HTTP_200_OK)

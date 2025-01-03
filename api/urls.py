@@ -19,7 +19,7 @@ from django.urls import path, include
 
 from accounts.views import CreateUserView, SignInView
 from mushaf_page.views import MushafPageView
-from user_page.views import UserPageView, CreateUserPageView, UserProgressView
+from user_page.views import UserPageView, CreateUserPageView, UserProgressView, RandomUserPageView
 from lead.views import CreateLeadView
 from mushaf_segment.views import MushafSegmentsView
 
@@ -32,6 +32,7 @@ urlpatterns = [
     path('user_pages', CreateUserPageView.as_view(), name='create_user_page'),   
     
     path('users/<int:user_id>/progress', UserProgressView.as_view(), name='user_progress'),   
+    path('users/<int:user_id>/progress/random', RandomUserPageView.as_view(), name='user_progress'),   
 
 
     path('leads', CreateLeadView.as_view(), name='create_lead'),
