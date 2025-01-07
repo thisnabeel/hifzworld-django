@@ -30,6 +30,65 @@ class MushafPage(models.Model):
     def __str__(self):
         return f"MushafPage {self.id}"
 
+    @classmethod
+    def find_page_by_verse_ref(cls, mushaf_id, verse_ref):
+        """
+        Find a MushafPage that contains the given verse reference.
+
+        Args:
+            mushaf_id (int): ID of the Mushaf to filter the pages.
+            verse_ref (str): The verse reference in the format "chapter:verse".
+
+        Returns:
+            MushafPage: The page containing the verse reference, or None if not found.
+        """
+        try:
+            # Ensure the verse reference is in the correct format
+            if not re.match(r'^\d+:\d+$', verse_ref):
+                raise ValueError("The verse reference must be in the format 'chapter:verse'.")
+
+            # Split the verse reference into chapter and verse (convert to integers for numerical comparison)
+            search_chapter, search_verse = map(int, verse_ref.split(':'))
+            print(f"Search Chapter: {search_chapter}, Search Verse: {search_verse}")
+
+            # Query all MushafPages for the specified mushaf
+            pages = cls.objects.filter(mushaf_id=mushaf_id)
+            print(f"Found {pages.count()} pages for mushaf_id: {mushaf_id}")
+
+            for page in pages:
+                # Skip pages without verse_ref_start or verse_ref_end
+                if not page.verse_ref_start or not page.verse_ref_end:
+                    print(f"Skipping page {page.id} due to missing verse_ref_start or verse_ref_end.")
+                    continue
+
+                # Parse start and end references for each page
+                try:
+                    start_chapter, start_verse = map(int, page.verse_ref_start.split(':'))
+                    end_chapter, end_verse = map(int, page.verse_ref_end.split(':'))
+                except ValueError as ve:
+                    print(f"Skipping page {page.id} due to invalid verse references: {ve}")
+                    continue
+
+                print(f"Checking page {page.id}: Start {start_chapter}:{start_verse}, End {end_chapter}:{end_verse}")
+
+                # Check if the search verse falls within the range of this page
+                if (start_chapter < search_chapter or 
+                    (start_chapter == search_chapter and start_verse <= search_verse)) and \
+                (end_chapter > search_chapter or 
+                    (end_chapter == search_chapter and end_verse >= search_verse)):
+                    print(f"Match found: Page {page.id}")
+                    return page
+
+            # If no matching page is found, return None
+            print(f"No matching page found for verse_ref: {verse_ref}")
+            return None
+
+        except ValueError as e:
+            raise ValueError(f"Invalid input: {e}")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            return None
+
     def create_mushaf_pages(mushaf_id):
         try:
             mushaf = Mushaf.objects.get(id=mushaf_id)  # Ensure the Mushaf object exists
