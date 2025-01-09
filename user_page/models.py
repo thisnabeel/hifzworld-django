@@ -15,7 +15,7 @@ class UserPage(models.Model):
     drawn_paths = models.JSONField(default=list, null=True)
 
     # Foreign key to User model
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='user_pages')
 
     # Foreign key to Branch model
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE)

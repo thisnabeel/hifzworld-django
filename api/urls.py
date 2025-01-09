@@ -42,4 +42,5 @@ urlpatterns = [
     path('', include('missions.urls')),
     path('', include('mushaf_page.urls')),
     path('', include('branch.urls')),
+    path('', include('stats.urls')),
 ]
