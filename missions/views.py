@@ -13,6 +13,13 @@ class MissionSetListCreateView(generics.ListCreateAPIView):
     queryset = MissionSet.objects.all()
     serializer_class = MissionSetSerializer
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            print(serializer.errors)  # This will show in your console
+            return Response(serializer.errors, status=400)
+        return super().create(request, *args, **kwargs)
+
 class MissionSetDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = MissionSet.objects.all()
     serializer_class = MissionSetSerializer

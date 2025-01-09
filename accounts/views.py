@@ -19,7 +19,7 @@ class SignInView(APIView):
         if serializer.is_valid():
             user = serializer.validated_data['user']
             print(f"User {user.id} successfully authenticated.")
-            return Response({'id': user.id, 'email': user.email}, status=status.HTTP_200_OK)
+            return Response({'id': user.id, 'email': user.email, 'first_name': user.first_name, 'last_name': user.last_name, 'gender': user.gender}, status=status.HTTP_200_OK)
         else:
             print("Authentication failed.")
             print(serializer.errors)
