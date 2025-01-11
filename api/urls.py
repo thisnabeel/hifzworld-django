@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from accounts.views import CreateUserView, SignInView
+from accounts.views import CreateUserView, SignInView, UpdateUserView
 from mushaf_page.views import MushafPageView, FindPageByVerseRefView
 from user_page.views import UserPageView, CreateUserPageView, UserProgressView, RandomUserPageView
 from lead.views import CreateLeadView
@@ -34,6 +34,7 @@ urlpatterns = [
     
     path('users/<int:user_id>/progress', UserProgressView.as_view(), name='user_progress'),   
     path('users/<int:user_id>/progress/random/<int:current_page_number>', RandomUserPageView.as_view(), name='user_progress'),   
+    path('users/<int:user_id>/update/', UpdateUserView.as_view(), name='update-user'),
 
 
     path('leads', CreateLeadView.as_view(), name='create_lead'),

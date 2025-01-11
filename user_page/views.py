@@ -15,7 +15,7 @@ from operator import attrgetter
 import random
 from random import choice
 from django.db.models import Max
-
+from django.db.models import Q
 
 class CreateUserPageView(APIView):
     def post(self, request):
@@ -92,14 +92,47 @@ class UserProgressView(APIView):
 
 class RandomUserPageView(APIView):
     def get(self, request, user_id, current_page_number):
-        # Step 1: Get the latest UserPage for each mushaf_page where drawn_paths is not null and not empty
+        # First get the user and check for verse boundaries
+        user = get_object_or_404(get_user_model(), id=user_id)
+        
+        # Initialize page range constraints
+        page_range_filter = ~Q(mushaf_page=current_page_number)  # Default exclude current page
+        
+        # If user has verse boundaries set, calculate page range
+        if user.starting_verse_boundary and user.ending_verse_boundary and user.starting_verse_boundary.strip() and user.ending_verse_boundary.strip():
+            # Proceed with existing boundaries
+            try:
+                starting_page = MushafPage.find_page_by_verse_ref(mushaf_id=1, verse_ref=user.starting_verse_boundary)
+                ending_page = MushafPage.find_page_by_verse_ref(mushaf_id=1, verse_ref=user.ending_verse_boundary)
+                
+                # Add page range to filter
+                page_range_filter &= Q(mushaf_page__gte=starting_page) & Q(mushaf_page__lte=ending_page)
+            except Exception as e:
+                return Response(
+                    {"error": f"Error processing verse boundaries: {str(e)}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            # If either boundary is empty string, null, or just whitespace, proceed without page range filtering
+            pass  # page_range_filter will only contain the current_page exclusion
+
+        # Step 1: Get the latest UserPage for each mushaf_page within boundaries
         newest_user_pages = (
-            UserPage.objects.filter(user_id=user_id, drawn_paths__isnull=False)
+            UserPage.objects.filter(
+                user_id=user_id,
+                drawn_paths__isnull=False
+            )
+            .filter(page_range_filter)  # Apply page range filter
             .exclude(drawn_paths=[])
-            .exclude(mushaf_page=current_page_number)
-            .values('mushaf_page')  # Group by mushaf_page
-            .annotate(latest_created_at=Max('created_at'))  # Get the latest created_at for each mushaf_page
+            .values('mushaf_page')
+            .annotate(latest_created_at=Max('created_at'))
         )
+
+        if not newest_user_pages:
+            return Response(
+                {"message": "No UserPages found within the specified verse boundaries"},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
         # Step 2: Fetch the actual UserPage instances for the latest entries
         newest_user_page_ids = [
@@ -116,15 +149,16 @@ class RandomUserPageView(APIView):
         # Step 4: Filter the pages with drawn_paths that contains an array with more than 10 objects
         filtered_user_pages = []
         for page in user_pages:
-            # Check each array in drawn_paths and find if any array has more than 10 objects
             for drawn_path_array in page.drawn_paths:
                 if isinstance(drawn_path_array, list) and len(drawn_path_array) > 10:
                     filtered_user_pages.append(page)
-                    break  # No need to check further if one array matches the condition
+                    break
 
         if not filtered_user_pages:
-            return Response({"message": "No UserPages found with drawn_paths arrays having more than 10 objects"},
-                            status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"message": "No UserPages found with drawn_paths arrays having more than 10 objects within the verse boundaries"},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
         # Step 5: Select a random UserPage from the filtered pages
         random_user_page = choice(filtered_user_pages)
@@ -132,3 +166,4 @@ class RandomUserPageView(APIView):
         # Step 6: Serialize and return the random UserPage
         serializer = UserPageSerializer(random_user_page)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    

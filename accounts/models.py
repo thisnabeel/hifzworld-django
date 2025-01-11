@@ -29,6 +29,8 @@ class User(AbstractBaseUser):
     first_name = models.CharField(max_length=150, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
     gender = models.CharField(max_length=6, choices=GENDER_CHOICES, blank=True)
+    starting_verse_boundary = models.CharField(max_length=10, blank=True)  # Updated to max_length=10
+    ending_verse_boundary = models.CharField(max_length=10, blank=True)    # Updated to max_length=10
     # Other fields as needed
     
     objects = UserManager()
