@@ -59,3 +59,34 @@ class UpdateUserView(APIView):
     def patch(self, request, user_id):
         # PATCH method for partial updates
         return self.put(request, user_id)
+        
+class SearchUserByEmailView(APIView):
+    # Optionally, uncomment this if you want only authenticated users to use this endpoint
+    # permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        email_query = request.query_params.get('email', '').strip()
+        
+        if not email_query:
+            return Response({"error": "Email query parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get the user model
+        User = get_user_model()
+
+        # Perform a case-insensitive search
+        users = User.objects.filter(email__icontains=email_query)
+
+        if users.exists():
+            # Serialize the user data (replace with your own serializer if needed)
+            user_data = [
+                {
+                    'id': user.id,
+                    'email': user.email,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'gender': user.gender,
+                } for user in users
+            ]
+            return Response(user_data, status=status.HTTP_200_OK)
+
+        return Response({"message": "No users found matching the query."}, status=status.HTTP_404_NOT_FOUND)
