@@ -38,8 +38,10 @@ urlpatterns = [
     path('users/<int:user_id>/update/', UpdateUserView.as_view(), name='update-user'),
 
 
+
     path('leads', CreateLeadView.as_view(), name='create_lead'),
     
+    path('user_grants/', include('user_grants.urls', namespace='user_grants')),
     path('', include('mushaf_segment.urls')),  
     path('', include('missions.urls')),
     path('', include('mushaf_page.urls')),
