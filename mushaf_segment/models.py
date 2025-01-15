@@ -1,5 +1,6 @@
 from django.db import models
 from mushaf.models import Mushaf
+from mushaf_page.models import MushafPage
 
 # Create your models here.
 class MushafSegment(models.Model):
@@ -13,4 +14,12 @@ class MushafSegment(models.Model):
 
     def __str__(self):
         return self.title  # Adjust this based on how you want to represent the object as a string
-    
+
+def find_mushaf_segment(mushaf_page_id):
+    page_number = MushafPage.objects.get(id=mushaf_page_id).page_number
+    segment = MushafSegment.objects.filter(
+        first_page__lte=page_number,
+        last_page__gte=page_number
+    ).first()
+
+    return segment

@@ -33,7 +33,6 @@ urlpatterns = [
     path('user_pages', CreateUserPageView.as_view(), name='create_user_page'),   
     path('users/search', SearchUserByEmailView.as_view(), name='search_user_page'),   
     
-    path('users/<int:user_id>/progress', UserProgressView.as_view(), name='user_progress'),   
     path('users/<int:user_id>/progress/random/<int:current_page_number>', RandomUserPageView.as_view(), name='user_progress'),   
     path('users/<int:user_id>/update/', UpdateUserView.as_view(), name='update-user'),
 
@@ -42,6 +41,7 @@ urlpatterns = [
     path('leads', CreateLeadView.as_view(), name='create_lead'),
     
     path('user_grants/', include('user_grants.urls', namespace='user_grants')),
+    path('', include('user_progress_report.urls')),  
     path('', include('mushaf_segment.urls')),  
     path('', include('missions.urls')),
     path('', include('mushaf_page.urls')),

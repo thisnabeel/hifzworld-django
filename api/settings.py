@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'lead',
     'branch',
     'user_grants',
+    'user_progress_report',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',

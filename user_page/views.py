@@ -16,6 +16,7 @@ import random
 from random import choice
 from django.db.models import Max
 from django.db.models import Q
+from user_progress_report.models import update_user_progress_report
 
 class CreateUserPageView(APIView):
     def post(self, request):
@@ -35,6 +36,7 @@ class CreateUserPageView(APIView):
                     camped=request.data.get('camped', False)
                 )
                 serializer = CreateUserPageSerializer(user_page)
+                update_user_progress_report(user_page)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
 
             except Exception as e:
