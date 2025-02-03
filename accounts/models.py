@@ -29,10 +29,12 @@ class User(AbstractBaseUser):
     first_name = models.CharField(max_length=150, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
     gender = models.CharField(max_length=6, choices=GENDER_CHOICES, blank=True)
-    starting_verse_boundary = models.CharField(max_length=10, blank=True)  # Updated to max_length=10
-    ending_verse_boundary = models.CharField(max_length=10, blank=True)    # Updated to max_length=10
-    # Other fields as needed
-    
+    starting_verse_boundary = models.CharField(max_length=10, blank=True)  
+    ending_verse_boundary = models.CharField(max_length=10, blank=True)    
+
+    # **New Peer ID field for WebRTC**
+    peer_id = models.CharField(max_length=255, unique=True, null=True, blank=True) 
+
     objects = UserManager()
     
     USERNAME_FIELD = 'email'
@@ -43,3 +45,4 @@ class User(AbstractBaseUser):
     
     def __str__(self):
         return f"User {self.id}"
+

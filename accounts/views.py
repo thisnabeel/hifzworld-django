@@ -52,7 +52,9 @@ class UpdateUserView(APIView):
                 'last_name': user.last_name,
                 'gender': user.gender,
                 'starting_verse_boundary': user.starting_verse_boundary,
-                'ending_verse_boundary': user.ending_verse_boundary
+                'ending_verse_boundary': user.ending_verse_boundary,
+                'peer_id': user.peer_id
+
             }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -89,4 +91,24 @@ class SearchUserByEmailView(APIView):
             ]
             return Response(user_data, status=status.HTTP_200_OK)
 
+        return Response({"message": "No users found matching the query."}, status=status.HTTP_404_NOT_FOUND)
+
+class FindUserByIdView(APIView):
+    # Optionally, uncomment this if you want only authenticated users to use this endpoint
+    # permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id):
+        user = get_object_or_404(get_user_model(), id=user_id)
+        
+        # # Check if the authenticated user is trying to update their own data
+        # if request.user.id != user.id:
+        #     return Response(
+        #         {"error": "You don't have permission to update this user's data"},
+        #         status=status.HTTP_403_FORBIDDEN
+        #     )
+        
+        # Update only the fields that are provided
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            return Response(serializer.data)
         return Response({"message": "No users found matching the query."}, status=status.HTTP_404_NOT_FOUND)
