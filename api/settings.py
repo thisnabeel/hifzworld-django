@@ -39,6 +39,7 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', '').split(',')
 # Application definition
 
 INSTALLED_APPS = [
+    'django_extensions',
     'corsheaders',
     'user_page',
     'mushaf_page',
