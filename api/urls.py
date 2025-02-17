@@ -23,6 +23,7 @@ from user_page.views import UserPageView, CreateUserPageView, UserProgressView, 
 from lead.views import CreateLeadView
 from mushaf_segment.views import MushafSegmentsView
 
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('users/sign_up', CreateUserView.as_view(), name='create_user'),
@@ -38,10 +39,10 @@ urlpatterns = [
     path('users/<int:user_id>/update/', UpdateUserView.as_view(), name='update-user'),
 
 
-
     path('leads', CreateLeadView.as_view(), name='create_lead'),
     
     path('user_grants/', include('user_grants.urls', namespace='user_grants')),
+    path('', include('events.urls')),
     path('', include('user_progress_report.urls')),  
     path('', include('mushaf_segment.urls')),  
     path('', include('missions.urls')),
