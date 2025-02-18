@@ -24,3 +24,5 @@ typing_extensions==4.8.0
 urllib3==2.0.7
 django-extensions==3.2.3
 daphne==4.1.2
+channels==4.2.0
+channels-redis==4.2.1
