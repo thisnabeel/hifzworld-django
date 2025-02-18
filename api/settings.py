@@ -16,8 +16,11 @@ import dj_database_url
 
 # Determine environment
 ENVIRONMENT = config('DJANGO_ENV', 'development')
-# DEBUG = ENVIRONMENT == 'development'
-DEBUG=True
+DEBUG = ENVIRONMENT == 'development'
+
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,6 +43,8 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
 ]
+
+
 
 # Application definition
 INSTALLED_APPS = [
