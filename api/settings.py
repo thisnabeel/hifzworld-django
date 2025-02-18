@@ -12,33 +12,35 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 from decouple import config
+import dj_database_url
 
-
-
+# Determine environment
 ENVIRONMENT = config('DJANGO_ENV', 'development')
 DEBUG = ENVIRONMENT == 'development'
-
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# ASGI Application
 ASGI_APPLICATION = 'api.asgi.application'
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
+# Security settings
 SECRET_KEY = config('SECRET_KEY')
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
+# Fix for infinite redirects
+SECURE_SSL_REDIRECT = False  # Disable HTTPS forced redirection (Render already handles it)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # Trust Render proxy headers
 
-
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', '').split(',')
-
+# Allowed hosts
+ALLOWED_HOSTS = [
+    "hifzworld.onrender.com",
+    "localhost",
+    "127.0.0.1",
+]
 
 # Application definition
-
 INSTALLED_APPS = [
     'django_extensions',
     'corsheaders',
@@ -71,7 +73,7 @@ CHANNEL_LAYERS = {
     },
 }
 
-
+# Middleware
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -83,6 +85,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# CORS Settings
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5173",
@@ -92,37 +95,20 @@ CORS_ALLOWED_ORIGINS = [
     "https://www.hifz.world"
 ]
 
-
 CORS_ALLOW_METHODS = [
-    "DELETE",
-    "GET",
-    "OPTIONS",
-    "PATCH",
-    "POST",
-    "PUT",
+    "DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT"
 ]
+
 CORS_ALLOW_HEADERS = [
-    "accept",
-    "accept-encoding",
-    "authorization",
-    "content-type",
-    "dnt",
-    "origin",
-    "user-agent",
-    "x-csrftoken",
-    "x-requested-with",
-    "cache-control",
-    "pragma",
+    "accept", "accept-encoding", "authorization", "content-type",
+    "dnt", "origin", "user-agent", "x-csrftoken", "x-requested-with",
+    "cache-control", "pragma"
 ]
-# CORS_ORIGIN_WHITELIST = (
-#     "http://localhost:5173",  
-#     "http://localhost:5174", 
-# )
-# CORS_ORIGIN_ALLOW_ALL=True
 
-
+# Root URL configuration
 ROOT_URLCONF = 'api.urls'
 
+# Template settings
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -141,32 +127,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'api.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
-import dj_database_url
-
-
+# Database Configuration
 DATABASES = {
     'default': dj_database_url.config(
         default=config('DATABASE_URL')
     )
 }
 
+# Authentication backends
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
-# Password validation
-# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -182,33 +155,24 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-SECURE_HSTS_SECONDS = 31536000
+# Security Headers
+SECURE_HSTS_SECONDS = 31536000  # Keep this for security
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
 
-SECURE_SSL_REDIRECT = ENVIRONMENT != 'development'
-
-# Internationalization
-# https://docs.djangoproject.com/en/4.2/topics/i18n/
-
+# Internationalization settings
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
-
+# Static file settings
 STATIC_URL = 'static/'
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
+# AWS Storage Configuration
 AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
