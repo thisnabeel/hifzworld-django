@@ -16,7 +16,8 @@ import dj_database_url
 
 # Determine environment
 ENVIRONMENT = config('DJANGO_ENV', 'development')
-DEBUG = ENVIRONMENT == 'development'
+# DEBUG = ENVIRONMENT == 'development'
+DEBUG=True
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
