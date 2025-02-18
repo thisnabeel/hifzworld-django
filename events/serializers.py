@@ -16,7 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class EventSerializer(serializers.ModelSerializer):
     datetime_local = serializers.SerializerMethodField()  # ✅ Convert UTC to local time zone
-    user = UserSerializer()  # ✅ Nested serializer to include full user details
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())  # ✅ Accepts only user ID
 
     class Meta:
         model = Event

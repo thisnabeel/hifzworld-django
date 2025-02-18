@@ -6,6 +6,8 @@ from .models import Event
 from .serializers import EventSerializer
 from rest_framework import generics
 from user_grants.models import UserGrant  # ✅ Import UserGrant model
+from django.utils.timezone import now
+import pytz  # ✅ Import pytz for timezone handling
 
 
 class EventListCreateView(APIView):
@@ -14,9 +16,18 @@ class EventListCreateView(APIView):
     """
 
     def get(self, request):
-        events = Event.objects.all()
+        user_timezone = request.GET.get("timezone", "UTC")  # Get timezone from request, default to UTC
+
+        try:
+            timezone = pytz.timezone(user_timezone)  # Convert to pytz timezone
+        except pytz.UnknownTimeZoneError:
+            return Response({"error": "Invalid timezone"}, status=status.HTTP_400_BAD_REQUEST)
+
+        current_time = now().astimezone(timezone)  # Convert current time to user's timezone
+        events = Event.objects.filter(datetime__gt=current_time)  # Filter future events
         serializer = EventSerializer(events, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
     def post(self, request):
         print("Received Data:", request.data)  # ✅ Debugging
@@ -71,21 +82,21 @@ class EventDetailView(APIView):
     API endpoint for retrieving, updating, and deleting a single event.
     """
 
-    def get(self, request, pk):
-        event = get_object_or_404(Event, pk=pk)
+    def get(self, request, event_id):
+        event = get_object_or_404(Event, pk=event_id)
         serializer = EventSerializer(event)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def put(self, request, pk):
-        event = get_object_or_404(Event, pk=pk)
+    def patch(self, request, event_id):
+        event = get_object_or_404(Event, id=event_id)
         serializer = EventSerializer(event, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, pk):
-        event = get_object_or_404(Event, pk=pk)
+    def delete(self, request, event_id):
+        event = get_object_or_404(Event, id=event_id)
         event.delete()
         return Response({"message": "Event deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
