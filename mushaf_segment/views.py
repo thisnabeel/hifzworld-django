@@ -36,3 +36,14 @@ class MushafSurahSegmentsView(APIView):
         
         # Return the serialized data in the response
         return Response(segment_serializer.data)
+
+class MushafJuzSegmentsView(APIView):
+    def get(self, request, mushaf_id):
+        # Perform the query and order by category_position
+        mushaf_segments = MushafSegment.objects.filter(mushaf_id=mushaf_id, category="juz").order_by('category_position')
+
+        # Serialize the queryset using DRF serializers
+        segment_serializer = MushafSegmentSerializer(mushaf_segments, many=True)
+        
+        # Return the serialized data in the response
+        return Response(segment_serializer.data)
