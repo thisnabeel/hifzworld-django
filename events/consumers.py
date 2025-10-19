@@ -4,9 +4,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from .models import MatchmakingRequest
 
-User = get_user_model()
 logger = logging.getLogger(__name__)
 
 class WebRTCConsumer(AsyncWebsocketConsumer):
@@ -102,12 +100,13 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
     def update_user_online_status(self, is_online):
         """Update user's online status."""
         try:
+            User = get_user_model()
             user = User.objects.get(id=self.user_id)
             user.is_online = is_online
             user.last_seen = timezone.now()
             user.save()
-        except User.DoesNotExist:
-            logger.error(f"User {self.user_id} not found for online status update")
+        except Exception as e:
+            logger.error(f"User {self.user_id} not found for online status update: {e}")
 
     async def receive(self, text_data):
         """Handles incoming matchmaking messages."""
