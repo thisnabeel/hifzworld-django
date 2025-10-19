@@ -3,7 +3,6 @@ from django.utils import timezone
 from django.utils.timezone import now
 import random
 import string
-from django.conf import settings
 
 def generate_unique_code():
     return ''.join(random.choices(string.digits, k=6))
@@ -21,8 +20,8 @@ class MatchmakingRequest(models.Model):
         ('completed', 'Completed'),
     ]
     
-    requester = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sent_requests')
-    target_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='received_requests')
+    requester = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='sent_requests')
+    target_user = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='received_requests')
     status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -51,11 +50,11 @@ class Room(models.Model):
     room_code = models.CharField(max_length=8, unique=True, default=generate_room_code, editable=False)
     
     # Participants
-    user1 = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='rooms_as_user1')
-    user2 = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='rooms_as_user2')
+    user1 = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='rooms_as_user1')
+    user2 = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='rooms_as_user2')
     
     # Room metadata
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_rooms')
+    created_by = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='created_rooms')
     status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='waiting')
     title = models.CharField(max_length=255, default='PVP Match')
     
@@ -105,7 +104,7 @@ class RoomParticipant(models.Model):
     Track who is currently in the room (real-time)
     """
     room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='participants')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='room_participations')
+    user = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='room_participations')
     joined_at = models.DateTimeField(auto_now_add=True)
     is_connected = models.BooleanField(default=False)
     last_seen = models.DateTimeField(default=now)
@@ -123,8 +122,8 @@ class Event(models.Model):
         (False, 'Public'),
     ]
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='events')
-    invited_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='invited_events')
+    user = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='events')
+    invited_user = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='invited_events')
     
     title = models.CharField(max_length=255)
     datetime = models.DateTimeField(default=now)
