@@ -10,13 +10,19 @@ logger = logging.getLogger(__name__)
 class WebRTCConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         """Handles WebSocket connection."""
-        self.event_code = self.scope['url_route']['kwargs']['event_code']
-        self.room_group_name = f"webrtc_{self.event_code}"
+        try:
+            self.event_code = self.scope['url_route']['kwargs']['event_code']
+            self.room_group_name = f"webrtc_{self.event_code}"
 
-        logger.info(f"🔗 WebSocket connected: Event Code {self.event_code}")
+            logger.info(f"🔗 WebSocket connecting: Event Code {self.event_code}")
 
-        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
-        await self.accept()
+            await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+            await self.accept()
+            
+            logger.info(f"✅ WebSocket connected successfully: Event Code {self.event_code}")
+        except Exception as e:
+            logger.error(f"❌ WebSocket connection failed: {e}")
+            await self.close()
 
     async def disconnect(self, close_code):
         """Handles WebSocket disconnection."""
@@ -69,9 +75,17 @@ class WebRTCConsumer(AsyncWebsocketConsumer):
             if sender_channel and sender_channel == self.channel_name:
                 return
                 
-            await self.send(text_data=json.dumps(event["message"]))
+            message = event.get("message", {})
+            if message:
+                await self.send(text_data=json.dumps(message))
+                logger.debug(f"📤 WebRTC signal sent: {message.get('type', 'unknown')}")
         except Exception as e:
             logger.error(f"❌ Error sending WebSocket message: {e}")
+            # Try to close the connection if it's in a bad state
+            try:
+                await self.close()
+            except:
+                pass
 
 
 class MatchmakingConsumer(AsyncWebsocketConsumer):
