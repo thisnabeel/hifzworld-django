@@ -50,6 +50,18 @@ class WebRTCConsumer(AsyncWebsocketConsumer):
             message_type = data.get("type", "unknown")
             logger.debug(f"📨 Received message type: {message_type}")
             
+            # Handle heartbeat messages first
+            if message_type == "ping":
+                try:
+                    await self.send(text_data=json.dumps({"type": "pong"}))
+                    logger.debug("📤 Heartbeat pong sent")
+                except Exception as e:
+                    logger.error(f"❌ Error sending pong: {e}")
+                return
+            elif message_type == "pong":
+                logger.debug("📨 Heartbeat pong received")
+                return
+            
             # Handle check-room message - notify other users that someone joined
             if message_type == "check-room":
                 try:
