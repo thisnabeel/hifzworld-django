@@ -56,7 +56,7 @@ class WebRTCConsumer(AsyncWebsocketConsumer):
                     "sender_channel": self.channel_name
                 }
             )
-            logger.debug(f"📩 WebRTC message relayed: {data}")
+            logger.info(f"📩 WebRTC message relayed: {data}")
 
         except json.JSONDecodeError:
             logger.error("❌ Failed to parse WebSocket message. Ignoring invalid JSON.")
@@ -67,8 +67,10 @@ class WebRTCConsumer(AsyncWebsocketConsumer):
             # Don't send the message back to the sender
             sender_channel = event.get("sender_channel")
             if sender_channel and sender_channel == self.channel_name:
+                logger.info(f"🚫 Skipping send back to sender: {event['message'].get('type', 'unknown')}")
                 return
                 
+            logger.info(f"📤 Sending WebRTC message: {event['message'].get('type', 'unknown')}")
             await self.send(text_data=json.dumps(event["message"]))
         except Exception as e:
             logger.error(f"❌ Error sending WebSocket message: {e}")
