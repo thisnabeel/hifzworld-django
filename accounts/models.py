@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
+from django.utils import timezone
 
 class UserManager(BaseUserManager):
     def create_user(self, email=None, password=None, **extra_fields):
@@ -33,7 +34,12 @@ class User(AbstractBaseUser):
     ending_verse_boundary = models.CharField(max_length=10, blank=True)    
 
     # **New Peer ID field for WebRTC**
-    peer_id = models.CharField(max_length=255, unique=True, null=True, blank=True) 
+    peer_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    
+    # **Online status fields for PVP matching**
+    is_online = models.BooleanField(default=False)
+    last_seen = models.DateTimeField(default=timezone.now)
+    is_available_for_match = models.BooleanField(default=True) 
 
     objects = UserManager()
     
