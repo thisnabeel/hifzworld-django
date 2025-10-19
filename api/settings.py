@@ -73,14 +73,35 @@ INSTALLED_APPS = [
 
 AUTH_USER_MODEL = 'accounts.User'
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer" if DEBUG else "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [config('REDIS_URL', default='redis://localhost:6379')] if not DEBUG else [],
+# Channel layers configuration with fallback for production
+REDIS_URL = config('REDIS_URL', default=None)
+
+if DEBUG:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
         },
-    },
-}
+    }
+else:
+    # Use Redis if available, otherwise fallback to InMemory for development/testing
+    if REDIS_URL:
+        CHANNEL_LAYERS = {
+            "default": {
+                "BACKEND": "channels_redis.core.RedisChannelLayer",
+                "CONFIG": {
+                    "hosts": [REDIS_URL],
+                    "capacity": 1000,
+                    "expiry": 60,
+                },
+            },
+        }
+    else:
+        # Fallback to InMemoryChannelLayer if Redis is not available
+        CHANNEL_LAYERS = {
+            "default": {
+                "BACKEND": "channels.layers.InMemoryChannelLayer",
+            },
+        }
 
 # Middleware
 MIDDLEWARE = [
@@ -101,7 +122,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5174",
     "https://hifzworld.onrender.com",
     "https://hifzworld-svelte-thisnabeel.vercel.app",
-    "https://www.hifz.world"
+    "https://www.hifz.world",
+    "https://hifz.world",  # Add both www and non-www versions
 ]
 
 CORS_ALLOW_METHODS = [
@@ -111,8 +133,12 @@ CORS_ALLOW_METHODS = [
 CORS_ALLOW_HEADERS = [
     "accept", "accept-encoding", "authorization", "content-type",
     "dnt", "origin", "user-agent", "x-csrftoken", "x-requested-with",
-    "cache-control", "pragma"
+    "cache-control", "pragma", "sec-websocket-protocol", "sec-websocket-key", "sec-websocket-version"
 ]
+
+# Additional CORS settings for WebSocket connections
+CORS_ALLOW_CREDENTIALS = True
+CORS_PREFLIGHT_MAX_AGE = 86400
 
 # Root URL configuration
 ROOT_URLCONF = 'api.urls'

@@ -13,7 +13,6 @@ from api.routing import websocket_urlpatterns
 
 application = ProtocolTypeRouter({
     "http": django_asgi_app,
-    "websocket": AuthMiddlewareStack(
-        URLRouter(websocket_urlpatterns)
-    ),
+    # Remove AuthMiddlewareStack for WebRTC connections to avoid auth issues
+    "websocket": URLRouter(websocket_urlpatterns),
 })

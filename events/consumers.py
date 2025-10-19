@@ -11,23 +11,44 @@ class WebRTCConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         """Handles WebSocket connection."""
         try:
+            # Extract event_code from URL path
             self.event_code = self.scope['url_route']['kwargs']['event_code']
             self.room_group_name = f"webrtc_{self.event_code}"
+            
+            # Get origin information
+            headers = dict(self.scope.get('headers', []))
+            origin = headers.get(b'origin', b'').decode('utf-8') if b'origin' in headers else 'Unknown'
+            client_ip = self.scope.get('client', ['Unknown'])[0]
 
             logger.info(f"🔗 WebSocket connecting: Event Code {self.event_code}")
+            logger.info(f"🔗 Client IP: {client_ip}")
+            logger.info(f"🔗 Origin: {origin}")
 
-            await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+            # Accept the connection first to avoid connection timeouts
             await self.accept()
             
+            # Add to room group after accepting
+            await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+            
             logger.info(f"✅ WebSocket connected successfully: Event Code {self.event_code}")
+            
         except Exception as e:
-            logger.error(f"❌ WebSocket connection failed: {e}")
-            await self.close()
+            logger.error(f"❌ WebSocket connection failed for event {getattr(self, 'event_code', 'unknown')}: {e}")
+            logger.error(f"❌ Exception type: {type(e).__name__}")
+            logger.error(f"❌ Full traceback: {e}", exc_info=True)
+            try:
+                await self.close()
+            except:
+                pass
 
     async def disconnect(self, close_code):
         """Handles WebSocket disconnection."""
-        logger.info(f"❌ WebSocket disconnected: {self.event_code} (Code {close_code})")
-        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+        try:
+            logger.info(f"❌ WebSocket disconnected: {getattr(self, 'event_code', 'unknown')} (Code {close_code})")
+            if hasattr(self, 'room_group_name') and hasattr(self, 'channel_name'):
+                await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+        except Exception as e:
+            logger.error(f"❌ Error during disconnect: {e}")
 
     async def receive(self, text_data):
         """Handles incoming messages and broadcasts to the group."""
