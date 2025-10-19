@@ -20,10 +20,14 @@ class WebRTCConsumer(AsyncWebsocketConsumer):
             await self.accept()
             self.is_connected = True
             
+            # Test channel layer connection and log backend type
+            channel_layer_type = self.channel_layer.__class__.__name__
+            logger.info(f"🔧 Channel layer backend: {channel_layer_type}")
+            
             # Add to room group after accepting
             await self.channel_layer.group_add(self.room_group_name, self.channel_name)
             
-            logger.info(f"✅ WebSocket connected: Event {self.event_code}")
+            logger.info(f"✅ WebSocket connected: Event {self.event_code} (Backend: {channel_layer_type})")
             
         except Exception as e:
             logger.error(f"❌ WebSocket connection failed: {type(e).__name__}: {e}")

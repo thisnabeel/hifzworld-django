@@ -76,7 +76,12 @@ AUTH_USER_MODEL = 'accounts.User'
 # Channel layers configuration with fallback for production
 REDIS_URL = config('REDIS_URL', default=None)
 
+# Log channel layer configuration for debugging
+import logging
+logging.basicConfig(level=logging.INFO)
+
 if DEBUG:
+    print("🔧 Using InMemoryChannelLayer for development")
     CHANNEL_LAYERS = {
         "default": {
             "BACKEND": "channels.layers.InMemoryChannelLayer",
@@ -85,6 +90,7 @@ if DEBUG:
 else:
     # Use Redis if available, otherwise fallback to InMemory for development/testing
     if REDIS_URL:
+        print(f"🔧 Using RedisChannelLayer with URL: {REDIS_URL[:20]}...")  # Log partial URL for security
         CHANNEL_LAYERS = {
             "default": {
                 "BACKEND": "channels_redis.core.RedisChannelLayer",
@@ -99,6 +105,7 @@ else:
             },
         }
     else:
+        print("⚠️ REDIS_URL not set, falling back to InMemoryChannelLayer")
         # Fallback to InMemoryChannelLayer if Redis is not available
         CHANNEL_LAYERS = {
             "default": {
