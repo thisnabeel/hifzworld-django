@@ -20,7 +20,7 @@ class EventSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Event
-        fields = ['id', 'title', 'datetime', 'datetime_local', 'time_zone', 'duration', 'is_private', 'user', 'peer_id']
+        fields = ['id', 'title', 'datetime', 'datetime_local', 'time_zone', 'duration', 'is_private', 'user', 'unique_code', 'peer_id']
 
     def get_datetime_local(self, obj):
         """Convert stored UTC datetime to the time zone saved in the database."""
