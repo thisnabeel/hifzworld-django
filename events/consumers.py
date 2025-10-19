@@ -33,11 +33,29 @@ class WebRTCConsumer(AsyncWebsocketConsumer):
                 logger.warning(f"⚠️ Invalid WebRTC message received: {data}")
                 return
 
+            message_type = data.get("type")
+            
+            # Handle check-room message - notify other users that someone joined
+            if message_type == "check-room":
+                # Notify other users in the room that a user has joined
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        "type": "send_signal",
+                        "message": {"type": "user-joined"},
+                        "sender_channel": self.channel_name
+                    }
+                )
+                logger.info(f"📱 User joined room {self.event_code}")
+                return
+
+            # Handle all other WebRTC signaling messages
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
                     "type": "send_signal",
-                    "message": data
+                    "message": data,
+                    "sender_channel": self.channel_name
                 }
             )
             logger.debug(f"📩 WebRTC message relayed: {data}")
@@ -48,6 +66,11 @@ class WebRTCConsumer(AsyncWebsocketConsumer):
     async def send_signal(self, event):
         """Sends a WebRTC signaling message to the client."""
         try:
+            # Don't send the message back to the sender
+            sender_channel = event.get("sender_channel")
+            if sender_channel and sender_channel == self.channel_name:
+                return
+                
             await self.send(text_data=json.dumps(event["message"]))
         except Exception as e:
             logger.error(f"❌ Error sending WebSocket message: {e}")
@@ -138,6 +161,20 @@ class MatchmakingConsumer(AsyncWebsocketConsumer):
         """Send friend status update to client."""
         await self.send(text_data=json.dumps({
             'type': 'friend_status_update',
+            'data': event['message']
+        }))
+
+    async def match_status_update(self, event):
+        """Send match status update to client."""
+        await self.send(text_data=json.dumps({
+            'type': 'match_status_update',
+            'data': event['message']
+        }))
+
+    async def room_notification(self, event):
+        """Send room notification to client."""
+        await self.send(text_data=json.dumps({
+            'type': 'room_notification',
             'data': event['message']
         }))
 

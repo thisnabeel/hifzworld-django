@@ -2,7 +2,8 @@ from django.urls import path
 from .views import (
     EventListCreateView, EventListView, EventDetailView, FriendsEventsView, 
     UpdateEventPeerIDView, OnlineFriendsView, UpdateOnlineStatusView,
-    CreateMatchmakingRequestView, MatchmakingRequestActionView, UserMatchmakingRequestsView
+    CreateMatchmakingRequestView, MatchmakingRequestActionView, UserMatchmakingRequestsView,
+    UpdateMatchStatusView, CreateRoomView, UserRoomsView, JoinRoomView, LeaveRoomView, EnterRoomView
 )
 
 urlpatterns = [
@@ -17,5 +18,13 @@ urlpatterns = [
     path('users/<int:user_id>/update-status/', UpdateOnlineStatusView.as_view(), name='update-online-status'),
     path('matchmaking/request/', CreateMatchmakingRequestView.as_view(), name='create-matchmaking-request'),
     path('matchmaking/request/<int:request_id>/action/', MatchmakingRequestActionView.as_view(), name='matchmaking-request-action'),
+    path('matchmaking/request/<int:request_id>/status/', UpdateMatchStatusView.as_view(), name='update-match-status'),
     path('users/<int:user_id>/matchmaking-requests/', UserMatchmakingRequestsView.as_view(), name='user-matchmaking-requests'),
+    
+    # Room endpoints
+    path('rooms/create/', CreateRoomView.as_view(), name='create-room'),
+    path('users/<int:user_id>/rooms/', UserRoomsView.as_view(), name='user-rooms'),
+    path('rooms/<int:room_id>/join/', JoinRoomView.as_view(), name='join-room'),
+    path('rooms/<int:room_id>/enter/', EnterRoomView.as_view(), name='enter-room'),
+    path('rooms/<int:room_id>/leave/', LeaveRoomView.as_view(), name='leave-room'),
 ]
