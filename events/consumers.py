@@ -15,27 +15,16 @@ class WebRTCConsumer(AsyncWebsocketConsumer):
             self.event_code = self.scope['url_route']['kwargs']['event_code']
             self.room_group_name = f"webrtc_{self.event_code}"
             
-            # Get origin information
-            headers = dict(self.scope.get('headers', []))
-            origin = headers.get(b'origin', b'').decode('utf-8') if b'origin' in headers else 'Unknown'
-            client_ip = self.scope.get('client', ['Unknown'])[0]
-
-            logger.info(f"🔗 WebSocket connecting: Event Code {self.event_code}")
-            logger.info(f"🔗 Client IP: {client_ip}")
-            logger.info(f"🔗 Origin: {origin}")
-
             # Accept the connection first to avoid connection timeouts
             await self.accept()
             
             # Add to room group after accepting
             await self.channel_layer.group_add(self.room_group_name, self.channel_name)
             
-            logger.info(f"✅ WebSocket connected successfully: Event Code {self.event_code}")
+            logger.info(f"✅ WebSocket connected: Event {self.event_code}")
             
         except Exception as e:
-            logger.error(f"❌ WebSocket connection failed for event {getattr(self, 'event_code', 'unknown')}: {e}")
-            logger.error(f"❌ Exception type: {type(e).__name__}")
-            logger.error(f"❌ Full traceback: {e}", exc_info=True)
+            logger.error(f"❌ WebSocket connection failed: {type(e).__name__}: {e}")
             try:
                 await self.close()
             except:
@@ -45,34 +34,36 @@ class WebRTCConsumer(AsyncWebsocketConsumer):
         """Handles WebSocket disconnection."""
         try:
             logger.info(f"❌ WebSocket disconnected: {getattr(self, 'event_code', 'unknown')} (Code {close_code})")
-            if hasattr(self, 'room_group_name') and hasattr(self, 'channel_name'):
+            if hasattr(self, 'room_group_name') and hasattr(self, 'channel_name') and hasattr(self, 'channel_layer'):
                 await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
         except Exception as e:
-            logger.error(f"❌ Error during disconnect: {e}")
+            logger.error(f"❌ Error during disconnect: {type(e).__name__}: {e}")
 
     async def receive(self, text_data):
         """Handles incoming messages and broadcasts to the group."""
         try:
             data = json.loads(text_data)
             if "type" not in data:
-                logger.warning(f"⚠️ Invalid WebRTC message received: {data}")
+                logger.warning("⚠️ Invalid WebRTC message received")
                 return
 
-            message_type = data.get("type")
-            logger.info(f"📨 Received message type: {message_type}")
+            message_type = data.get("type", "unknown")
+            logger.debug(f"📨 Received message type: {message_type}")
             
             # Handle check-room message - notify other users that someone joined
             if message_type == "check-room":
-                # Add small delay to ensure connection is stable
-                await self.channel_layer.group_send(
-                    self.room_group_name,
-                    {
-                        "type": "send_signal",
-                        "message": {"type": "user-joined"},
-                        "sender_channel": self.channel_name
-                    }
-                )
-                logger.info(f"📱 User joined room {self.event_code}")
+                try:
+                    await self.channel_layer.group_send(
+                        self.room_group_name,
+                        {
+                            "type": "send_signal",
+                            "message": {"type": "user-joined"},
+                            "sender_channel": self.channel_name
+                        }
+                    )
+                    logger.info(f"📱 User joined room {getattr(self, 'event_code', 'unknown')}")
+                except Exception as e:
+                    logger.error(f"❌ Error sending user-joined signal: {e}")
                 return
 
             # Handle all other WebRTC signaling messages
@@ -85,7 +76,7 @@ class WebRTCConsumer(AsyncWebsocketConsumer):
                         "sender_channel": self.channel_name
                     }
                 )
-                logger.info(f"📩 WebRTC message relayed: {message_type}")
+                logger.debug(f"📩 WebRTC message relayed: {message_type}")
             except Exception as e:
                 logger.error(f"❌ Error sending group message: {e}")
 
@@ -100,18 +91,18 @@ class WebRTCConsumer(AsyncWebsocketConsumer):
             # Don't send the message back to the sender
             sender_channel = event.get("sender_channel")
             if sender_channel and sender_channel == self.channel_name:
-                logger.debug(f"📤 Skipping self-message from {sender_channel}")
                 return
                 
             message = event.get("message", {})
-            if message:
+            if message and isinstance(message, dict):
+                message_type = message.get("type", "unknown")
                 await self.send(text_data=json.dumps(message))
-                logger.debug(f"📤 WebRTC signal sent: {message.get('type', 'unknown')}")
+                logger.debug(f"📤 WebRTC signal sent: {message_type}")
+        except (ConnectionResetError, ConnectionAbortedError) as e:
+            logger.warning(f"📤 Connection lost during send: {e}")
         except Exception as e:
-            logger.error(f"❌ Error sending WebSocket message: {e}")
-            logger.error(f"❌ Message that failed: {event.get('message', {})}")
-            # Log but don't close connection - this might be a transient issue
-            # The client will handle reconnection if needed
+            logger.error(f"❌ Error sending WebSocket message: {type(e).__name__}: {e}")
+            # Don't log the full message to avoid memory issues
 
 
 class MatchmakingConsumer(AsyncWebsocketConsumer):

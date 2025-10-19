@@ -90,8 +90,10 @@ else:
                 "BACKEND": "channels_redis.core.RedisChannelLayer",
                 "CONFIG": {
                     "hosts": [REDIS_URL],
-                    "capacity": 1000,
-                    "expiry": 60,
+                    "capacity": 500,
+                    "expiry": 30,
+                    "group_expiry": 86400,
+                    "symmetric_encryption_keys": [],
                 },
             },
         }
