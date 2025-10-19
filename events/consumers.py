@@ -14,9 +14,11 @@ class WebRTCConsumer(AsyncWebsocketConsumer):
             # Extract event_code from URL path
             self.event_code = self.scope['url_route']['kwargs']['event_code']
             self.room_group_name = f"webrtc_{self.event_code}"
+            self.is_connected = False
             
             # Accept the connection first to avoid connection timeouts
             await self.accept()
+            self.is_connected = True
             
             # Add to room group after accepting
             await self.channel_layer.group_add(self.room_group_name, self.channel_name)
@@ -25,6 +27,7 @@ class WebRTCConsumer(AsyncWebsocketConsumer):
             
         except Exception as e:
             logger.error(f"❌ WebSocket connection failed: {type(e).__name__}: {e}")
+            self.is_connected = False
             try:
                 await self.close()
             except:
@@ -34,6 +37,7 @@ class WebRTCConsumer(AsyncWebsocketConsumer):
         """Handles WebSocket disconnection."""
         try:
             logger.info(f"❌ WebSocket disconnected: {getattr(self, 'event_code', 'unknown')} (Code {close_code})")
+            self.is_connected = False
             if hasattr(self, 'room_group_name') and hasattr(self, 'channel_name') and hasattr(self, 'channel_layer'):
                 await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
         except Exception as e:
@@ -42,13 +46,19 @@ class WebRTCConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         """Handles incoming messages and broadcasts to the group."""
         try:
+            # Check message size before processing
+            message_size = len(text_data.encode('utf-8'))
+            if message_size > 100000:  # > 100KB limit
+                logger.error(f"❌ Message too large ({message_size} bytes), rejecting")
+                return
+                
             data = json.loads(text_data)
             if "type" not in data:
                 logger.warning("⚠️ Invalid WebRTC message received")
                 return
 
             message_type = data.get("type", "unknown")
-            logger.debug(f"📨 Received message type: {message_type}")
+            logger.debug(f"📨 Received message type: {message_type} ({message_size} bytes)")
             
             # Handle heartbeat messages first
             if message_type == "ping":
@@ -100,21 +110,50 @@ class WebRTCConsumer(AsyncWebsocketConsumer):
     async def send_signal(self, event):
         """Sends a WebRTC signaling message to the client."""
         try:
+            # Check if connection is still valid
+            if not getattr(self, 'is_connected', False):
+                logger.debug("📤 Skipping send - connection closed")
+                return
+                
             # Don't send the message back to the sender
             sender_channel = event.get("sender_channel")
             if sender_channel and sender_channel == self.channel_name:
+                logger.debug(f"📤 Skipping self-message")
                 return
                 
             message = event.get("message", {})
-            if message and isinstance(message, dict):
-                message_type = message.get("type", "unknown")
-                await self.send(text_data=json.dumps(message))
-                logger.debug(f"📤 WebRTC signal sent: {message_type}")
+            if not message or not isinstance(message, dict):
+                logger.warning("📤 Invalid message format, skipping")
+                return
+                
+            message_type = message.get("type", "unknown")
+            
+            # Handle large messages more carefully to prevent crashes
+            try:
+                message_json = json.dumps(message)
+                message_size = len(message_json.encode('utf-8'))
+                
+                # Log message size for large messages to help debug
+                if message_size > 10000:  # > 10KB
+                    logger.warning(f"📤 Large message ({message_size} bytes): {message_type}")
+                
+                # Additional safety check before sending
+                if not getattr(self, 'is_connected', False):
+                    logger.debug("📤 Skipping send - connection lost during processing")
+                    return
+                
+                await self.send(text_data=message_json)
+                logger.debug(f"📤 WebRTC signal sent: {message_type} ({message_size} bytes)")
+                
+            except (TypeError, ValueError) as json_error:
+                logger.error(f"❌ JSON serialization error for {message_type}: {json_error}")
+                return
+                
         except (ConnectionResetError, ConnectionAbortedError) as e:
             logger.warning(f"📤 Connection lost during send: {e}")
         except Exception as e:
             logger.error(f"❌ Error sending WebSocket message: {type(e).__name__}: {e}")
-            # Don't log the full message to avoid memory issues
+            logger.error(f"❌ Message type that failed: {event.get('message', {}).get('type', 'unknown')}")
 
 
 class MatchmakingConsumer(AsyncWebsocketConsumer):
