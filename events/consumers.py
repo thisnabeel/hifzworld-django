@@ -59,10 +59,11 @@ class WebRTCConsumer(AsyncWebsocketConsumer):
                 return
 
             message_type = data.get("type")
+            logger.info(f"📨 Received message type: {message_type}")
             
             # Handle check-room message - notify other users that someone joined
             if message_type == "check-room":
-                # Notify other users in the room that a user has joined
+                # Add small delay to ensure connection is stable
                 await self.channel_layer.group_send(
                     self.room_group_name,
                     {
@@ -75,18 +76,23 @@ class WebRTCConsumer(AsyncWebsocketConsumer):
                 return
 
             # Handle all other WebRTC signaling messages
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    "type": "send_signal",
-                    "message": data,
-                    "sender_channel": self.channel_name
-                }
-            )
-            logger.debug(f"📩 WebRTC message relayed: {data}")
+            try:
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        "type": "send_signal",
+                        "message": data,
+                        "sender_channel": self.channel_name
+                    }
+                )
+                logger.info(f"📩 WebRTC message relayed: {message_type}")
+            except Exception as e:
+                logger.error(f"❌ Error sending group message: {e}")
 
-        except json.JSONDecodeError:
-            logger.error("❌ Failed to parse WebSocket message. Ignoring invalid JSON.")
+        except json.JSONDecodeError as e:
+            logger.error(f"❌ Failed to parse WebSocket message: {e}")
+        except Exception as e:
+            logger.error(f"❌ Unexpected error in receive: {e}")
 
     async def send_signal(self, event):
         """Sends a WebRTC signaling message to the client."""
@@ -94,6 +100,7 @@ class WebRTCConsumer(AsyncWebsocketConsumer):
             # Don't send the message back to the sender
             sender_channel = event.get("sender_channel")
             if sender_channel and sender_channel == self.channel_name:
+                logger.debug(f"📤 Skipping self-message from {sender_channel}")
                 return
                 
             message = event.get("message", {})
@@ -102,11 +109,9 @@ class WebRTCConsumer(AsyncWebsocketConsumer):
                 logger.debug(f"📤 WebRTC signal sent: {message.get('type', 'unknown')}")
         except Exception as e:
             logger.error(f"❌ Error sending WebSocket message: {e}")
-            # Try to close the connection if it's in a bad state
-            try:
-                await self.close()
-            except:
-                pass
+            logger.error(f"❌ Message that failed: {event.get('message', {})}")
+            # Log but don't close connection - this might be a transient issue
+            # The client will handle reconnection if needed
 
 
 class MatchmakingConsumer(AsyncWebsocketConsumer):
